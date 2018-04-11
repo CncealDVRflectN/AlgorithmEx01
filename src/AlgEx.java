@@ -1,20 +1,21 @@
-import java.io.File;
-import java.io.PrintStream;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.PrintWriter;
 
-public class AlgEx {
+public class AlgEx implements Runnable {
     private static class Vertex {
-        Integer key;
+        int key;
+
         Vertex right;
         Vertex left;
 
         public Vertex() {
-            key = null;
+            key = 0;
             right = null;
             left = null;
         }
 
-        public Vertex(Integer num) {
+        public Vertex(int num) {
             key = num;
             right = null;
             left = null;
@@ -32,13 +33,16 @@ public class AlgEx {
             root = vertex;
         }
 
-        public boolean add(Vertex vertex) {
+        public boolean add(int num) {
+            Vertex vertex = new Vertex(num);
             Vertex iter = root;
+
             if (root == null) {
                 this.root = vertex;
                 return true;
             }
-            while (iter != null && iter.key != vertex.key) {
+
+            while (iter != null) {
                 if (vertex.key > iter.key) {
                     if (iter.right == null) {
                         iter.right = vertex;
@@ -57,27 +61,47 @@ public class AlgEx {
                     return false;
                 }
             }
+
             return true;
         }
 
-        public void directLeftRound(Vertex vertex, PrintStream writer) throws Exception {
-            if(vertex != null){
-                writer.println(vertex.key);
+        public void directLeftRound(Vertex vertex, PrintWriter writer) throws Exception {
+            if (vertex != null) {
+                writer.write(vertex.key + "\n");
                 directLeftRound(vertex.left, writer);
                 directLeftRound(vertex.right, writer);
             }
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Scanner scanner = new Scanner(new File("input.txt"));
-        Tree tree = new Tree();
-        PrintStream writer = new PrintStream("output.txt");
-        while (scanner.hasNextInt()) {
-            tree.add(new Vertex(scanner.nextInt()));
+    @Override
+    public void run() {
+        BufferedReader reader;
+        PrintWriter writer = null;
+        String line;
+        Tree tree;
+
+        try {
+            reader = new BufferedReader(new FileReader("input.txt"));
+            writer = new PrintWriter("output.txt");
+            tree = new Tree();
+
+            while ((line = reader.readLine()) != null) {
+                tree.add(Integer.valueOf(line));
+            }
+            reader.close();
+
+            tree.directLeftRound(tree.root, writer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                writer.close();
+            }
         }
-        tree.directLeftRound(tree.root, writer);
-        writer.close();
-        scanner.close();
+    }
+
+    public static void main(String[] args) throws Exception {
+        new Thread(null, new AlgEx(), "", 128 * 1024 * 1024).start();
     }
 }
